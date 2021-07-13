@@ -2,9 +2,9 @@
 
 import numpy as np
 import pandas as pd
-from teamName import getMyPosition as getPosition
+from hakkas import getMyPosition as getPosition
 
-# Algorithm testing file. 
+# Algorithm testing file.
 # Quantitative judging will be determined from output of this program.
 # Judging will use unseeen, future price data from the same universe.
 
@@ -17,15 +17,18 @@ commRate = 0.0050
 # Dollar position limit (maximum absolute dollar value of any individual stock position).
 dlrPosLimit = 10000
 
+
 def loadPrices(fn):
     global nt, nInst
-    df=pd.read_csv(fn, sep='\s+', header=None, index_col=None)
+    df = pd.read_csv(fn, sep='\s+', header=None, index_col=None)
     nt, nInst = df.values.shape
     return (df.values).T
 
-pricesFile="./prices250.txt"
+
+pricesFile = "./prices250.txt"
 prcAll = loadPrices(pricesFile)
-print ("Loaded %d instruments for %d days" % (nInst, nt))
+print("Loaded %d instruments for %d days" % (nInst, nt))
+
 
 def calcPL(prcHist):
     cash = 0
@@ -37,13 +40,14 @@ def calcPL(prcHist):
     frac1 = 0.
     value = 0
     todayPLL = []
-    (_,nt) = prcHist.shape
-    for t in range(201,251):
-        prcHistSoFar = prcHist[:,:t]
+    (_, nt) = prcHist.shape
+    for t in range(201, 251):
+        prcHistSoFar = prcHist[:, :t]
         newPosOrig = getPosition(prcHistSoFar)
-        curPrices = prcHistSoFar[:,-1] 
+        curPrices = prcHistSoFar[:, -1]
         posLimits = np.array([int(x) for x in dlrPosLimit / curPrices])
-        newPos = np.array([int(p) for p in np.clip(newPosOrig, -posLimits, posLimits)])
+        newPos = np.array([int(p)
+                           for p in np.clip(newPosOrig, -posLimits, posLimits)])
         deltaPos = newPos - curPos
         dvolumes = curPrices * np.abs(deltaPos)
         dvolume0 = np.sum(dvolumes[:50])
@@ -64,21 +68,20 @@ def calcPL(prcHist):
             ret = value / totDVolume
             frac0 = totDVolume0 / totDVolume
             frac1 = totDVolume1 / totDVolume
-        print ("Day %d value: %.2lf todayPL: $%.2lf $-traded: %.0lf return: %.5lf frac0: %.4lf frac1: %.4lf" % (t,value, todayPL, totDVolume, ret, frac0, frac1))
+        print("Day %d value: %.2lf todayPL: $%.2lf $-traded: %.0lf return: %.5lf frac0: %.4lf frac1: %.4lf" %
+              (t, value, todayPL, totDVolume, ret, frac0, frac1))
     pll = np.array(todayPLL)
-    (plmu,plstd) = (np.mean(pll), np.std(pll))
+    (plmu, plstd) = (np.mean(pll), np.std(pll))
     annSharpe = 0.0
     if (plstd > 0):
         annSharpe = 16 * plmu / plstd
     return (plmu, ret, annSharpe, totDVolume)
 
+
 # Output.
 (meanpl, ret, sharpe, dvol) = calcPL(prcAll)
-print ("=====")
-print ("mean(PL): %.0lf" % meanpl)
-print ("return: %.5lf" % ret)
-print ("annSharpe(PL): %.2lf " % sharpe)
-print ("totDvolume: %.0lf " % dvol)
-
-
-
+print("=====")
+print("mean(PL): %.0lf" % meanpl)
+print("return: %.5lf" % ret)
+print("annSharpe(PL): %.2lf " % sharpe)
+print("totDvolume: %.0lf " % dvol)
